@@ -294,29 +294,20 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getDropdownOptions(fieldName: string, attributeType: string, isTwoOptions: boolean) {
-    // eslint-disable-next-line spaced-comment
-    /*const request = `${this._clientUrl}EntityDefinitions(LogicalName='${
-      this._targetEntityType}')/Attributes/Microsoft.Dynamics.CRM.${
-      attributeType}?$select=LogicalName&$filter=LogicalName eq '${fieldName}'&$expand=OptionSet`;
-    const results = await getFetchResponse(request);*/
-    const options: IDropdownOption[] = [];
+    const request = `/_api/meo_entitydefinitionses?$select=meo_optionsetvalues&$filter=(meo_entitylogicalname eq '${this._targetEntityType}' and meo_fieldlogicalname eq '${fieldName}' and meo_definition eq 'OptionSetValues')`;
+    const results = await getFetchResponse(request);
+    console.log(results);
+    let options: IDropdownOption[] = [];
     if (!isTwoOptions) {
-      options.push({ key: '1', text: 'Compliant' });
-      options.push({ key: '2', text: 'Partially Compliant' });
-      options.push({ key: '3', text: 'Not Compliant' });
-      options.push({ key: '4', text: 'Not Applicable' });
-      // eslint-disable-next-line spaced-comment
-      /*options = results.value[0].OptionSet.Options.map((result: any) => ({
-        key: result.Value.toString(),
-        text: result.Label.UserLocalizedLabel.Label,
-      }));*/
+      const json = JSON.parse(results.value[0].meo_optionsetvalues);
+
+      options = json.map((result: any) => ({
+        key: String(result.id),
+        text: result.name,
+      }));
     }
     else {
-      options.push({ key: '1', text: 'Compliant' });
-      options.push({ key: '2', text: 'Partially Compliant' });
-      options.push({ key: '3', text: 'Not Compliant' });
-      options.push({ key: '4', text: 'Not Applicable' });
-
+      // change the code here to accept True False field, it will need to adapt the plugin code as well probably
       // eslint-disable-next-line spaced-comment
       /*const trueKey = results.value[0].OptionSet.TrueOption.Value.toString();
       const trueText = results.value[0].OptionSet.TrueOption.Label.UserLocalizedLabel.Label;
