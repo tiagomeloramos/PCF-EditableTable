@@ -7,6 +7,10 @@ import { Store } from '../utils/types';
 import { EditableGrid } from './EditableGrid/EditableGrid';
 import { Loading } from './Loading';
 import { getContainerHeight } from '../utils/commonUtils';
+import { useAppDispatch } from '../store/hooks';
+import { setLoading } from '../store/features/LoadingSlice';
+import { saveRecords } from '../store/features/RecordSlice';
+import { removeNewRows } from '../store/features/DatasetSlice';
 
 type DataSet = ComponentFramework.PropertyTypes.DataSet;
 
@@ -27,6 +31,8 @@ export const Wrapper = (props: IDataSetProps) => {
     setContainerHeight(height);
   }, []);
 
+  const dispatch = useAppDispatch();
+
   const SubgridSaveGuard: React.FC = () => {
     useEffect(() => {
       const updateButton = document.querySelector<HTMLButtonElement>('#UpdateButton');
@@ -41,9 +47,7 @@ export const Wrapper = (props: IDataSetProps) => {
         const saveBtn = document.querySelector<HTMLButtonElement>('#saveSubgrid');
 
         if (saveBtn && !saveBtn.disabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          alert('Please save the Toms subgrid before updating.');
+          saveButtonHandler(e)
         }
       };
 
@@ -56,7 +60,28 @@ export const Wrapper = (props: IDataSetProps) => {
       };
     }, []);
 
-    return null; // This component doesn’t render anything
+
+  const saveButtonHandler = (e: MouseEvent) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    dispatch(setLoading(true));
+    dispatch(saveRecords(props._service))
+      .unwrap()
+      .then(() => {
+        props.dataset.refresh();
+        dispatch(removeNewRows());
+        document.querySelector<HTMLButtonElement>('#NextButton').click();
+      })
+      .catch(error =>
+        props._service.openErrorDialog(error).then(() => {
+          dispatch(setLoading(false));
+        })
+      );
+    };
+
+  return null; // This component doesn’t render anything
   };
 
   return <Provider store={props._store} >
