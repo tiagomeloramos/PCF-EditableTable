@@ -33,6 +33,28 @@ export const Wrapper = (props: IDataSetProps) => {
 
   const dispatch = useAppDispatch();
 
+  const saveButtonHandler = (e: MouseEvent) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    dispatch(setLoading(true));
+    dispatch(saveRecords(props._service))
+      .unwrap()
+      .then(() => {
+        props.dataset.refresh();
+        dispatch(removeNewRows());
+        if (document.querySelector<HTMLButtonElement>('#NextButton')) {
+          document.querySelector<HTMLButtonElement>('#NextButton')?.click();
+        }
+      })
+      .catch(error => {
+        props._service.openErrorDialog(error).then(() => {
+          dispatch(setLoading(false));
+        });
+      });
+  };
+
   const SubgridSaveGuard: React.FC = () => {
     useEffect(() => {
       const updateButton = document.querySelector<HTMLButtonElement>('#UpdateButton');
@@ -47,7 +69,7 @@ export const Wrapper = (props: IDataSetProps) => {
         const saveBtn = document.querySelector<HTMLButtonElement>('#saveSubgrid');
 
         if (saveBtn && !saveBtn.disabled) {
-          saveButtonHandler(e)
+          saveButtonHandler(e);
         }
       };
 
@@ -60,28 +82,7 @@ export const Wrapper = (props: IDataSetProps) => {
       };
     }, []);
 
-
-  const saveButtonHandler = (e: MouseEvent) => {
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    dispatch(setLoading(true));
-    dispatch(saveRecords(props._service))
-      .unwrap()
-      .then(() => {
-        props.dataset.refresh();
-        dispatch(removeNewRows());
-        document.querySelector<HTMLButtonElement>('#NextButton').click();
-      })
-      .catch(error =>
-        props._service.openErrorDialog(error).then(() => {
-          dispatch(setLoading(false));
-        })
-      );
-    };
-
-  return null; // This component doesn’t render anything
+    return null; // This component doesn’t render anything
   };
 
   return <Provider store={props._store} >
